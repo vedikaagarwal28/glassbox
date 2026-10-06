@@ -1,0 +1,3 @@
+import pg from 'pg';
+export const pool=new pg.Pool({connectionString:process.env.DATABASE_URL});
+export async function migrate(){await pool.query(`CREATE TABLE IF NOT EXISTS users(id uuid primary key,email text unique not null,password_hash text not null); CREATE TABLE IF NOT EXISTS jobs(id uuid primary key,status text not null,language text not null,stdout text,stderr text,exit_code int,execution_time_ms real,memory_kb int,visual jsonb); CREATE TABLE IF NOT EXISTS snippets(id uuid primary key,language text not null,code text not null,stdin text default '',owner_id uuid references users(id));`)}

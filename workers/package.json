@@ -1,0 +1,1 @@
+{"name":"glassbox-worker","type":"module","scripts":{"start":"node src/worker.js"},"dependencies":{"bullmq":"^5.0.0","pg":"^8.11.3","socket.io-client":"^4.7.5"}}
