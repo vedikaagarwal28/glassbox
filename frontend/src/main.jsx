@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import Editor from '@monaco-editor/react';
 import './style.css';
@@ -115,6 +115,9 @@ function App() {
       if (currentResult.status !== 'queued') { clearInterval(poll); setResult(currentResult); setTab(currentResult.stderr ? 'Errors' : 'Output'); celebrate(currentResult); }
     }, 500);
   };
+  // Monaco keybindings are registered once on mount, so they call through a ref to see current state.
+  const runRef = useRef(run);
+  runRef.current = () => { if (result?.status !== 'running') run(); };
 
   const save = async () => {
     if (!token) { setAuthOpen(true); return; }
@@ -143,7 +146,6 @@ function App() {
         <span className="xp-points">{xp} XP</span>
       </div>
       <div className="topbar-actions">
-        <button className="button primary run-button" onClick={run} disabled={result?.status === 'running'}><span>▶</span> {result?.status === 'running' ? 'Running' : 'Run'}</button>
         <button className="button secondary" onClick={save}>Save / Share</button>
         {token ? <button className="text-button" onClick={() => { localStorage.removeItem('token'); setToken(''); }}>Log out</button> : <button className="text-button" onClick={() => setAuthOpen(true)}>Log in</button>}
       </div>
@@ -163,9 +165,9 @@ function App() {
     </nav>
     <main className="workspace">
       <section className="editor-pane panel">
-        <div className="panel-heading"><span className="panel-title">✏️ Source code</span><span className={`status-dot ${result?.status === 'running' ? 'busy' : ''}`}><i /> {status}</span></div>
+        <div className="panel-heading"><span className="panel-title">✏️ Source code</span><span className={`status-dot ${result?.status === 'running' ? 'busy' : ''}`}><i /> {status}</span><button className="button primary run-button" onClick={run} disabled={result?.status === 'running'} title="Run (Ctrl/⌘ + Enter)"><span>▶</span> {result?.status === 'running' ? 'Running' : 'Run'}</button></div>
         <div className="editor-wrap">
-          <Editor height="100%" language={languages[language].editor} theme="glassbox-light" value={code} onChange={(value) => { setCode(value || ''); setEdited(true); }} beforeMount={(monaco) => monaco.editor.defineTheme('glassbox-light', { base: 'vs', inherit: true, rules: [], colors: { 'editor.background': '#FFFFFF', 'editorLineNumber.foreground': '#9AB8BA', 'editorLineNumber.activeForeground': '#000000', 'editor.selectionBackground': '#FFEA79', 'editor.lineHighlightBackground': '#F2FAFA' } })} options={{ fontSize: 14, lineHeight: 23, minimap: { enabled: false }, padding: { top: 16 }, wordWrap: 'on', automaticLayout: true }} />
+          <Editor height="100%" language={languages[language].editor} theme="glassbox-light" value={code} onMount={(editor, monaco) => editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current())} onChange={(value) => { setCode(value || ''); setEdited(true); }} beforeMount={(monaco) => monaco.editor.defineTheme('glassbox-light', { base: 'vs', inherit: true, rules: [], colors: { 'editor.background': '#FFFFFF', 'editorLineNumber.foreground': '#9AB8BA', 'editorLineNumber.activeForeground': '#000000', 'editor.selectionBackground': '#FFEA79', 'editor.lineHighlightBackground': '#F2FAFA' } })} options={{ fontSize: 14, lineHeight: 23, minimap: { enabled: false }, padding: { top: 16 }, wordWrap: 'on', automaticLayout: true }} />
         </div>
         <textarea aria-label="Standard input" placeholder="⌨️ Standard input (optional)" value={stdin} onChange={(event) => setStdin(event.target.value)} />
       </section>
