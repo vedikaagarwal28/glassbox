@@ -1,26 +1,120 @@
 services:
   postgres:
     image: postgres:16-alpine
-    environment: { POSTGRES_DB: glassbox, POSTGRES_USER: glassbox, POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} }
-    volumes: [postgres_data:/var/lib/postgresql/data]
-    healthcheck: {test: ["CMD-SHELL", "pg_isready -U glassbox"], interval: 5s, timeout: 3s, retries: 15}
+    environment:
+      POSTGRES_DB: glassbox
+      POSTGRES_USER: glassbox
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-glassbox-local-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glassbox -d glassbox"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   redis:
     image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  runtime-python:
+    image: glassbox-python
+    build:
+      context: .
+      dockerfile: docker/runtimes/python/Dockerfile
+    entrypoint: ["sleep"]
+    command: ["infinity"]
+
+  runtime-c:
+    image: glassbox-c
+    build:
+      context: .
+      dockerfile: docker/runtimes/c/Dockerfile
+    entrypoint: ["sleep"]
+    command: ["infinity"]
+
+  runtime-java:
+    image: glassbox-java
+    build:
+      context: .
+      dockerfile: docker/runtimes/java/Dockerfile
+    entrypoint: ["sleep"]
+    command: ["infinity"]
+
+  runtime-node:
+    image: glassbox-node
+    build:
+      context: .
+      dockerfile: docker/runtimes/node/Dockerfile
+    entrypoint: ["sleep"]
+    command: ["infinity"]
+
+  runtime-glassbox:
+    image: glassbox-glassbox-lang
+    build:
+      context: .
+      dockerfile: docker/runtimes/glassbox-lang/Dockerfile
+    entrypoint: ["sleep"]
+    command: ["infinity"]
+
   api:
-    build: {context: ., dockerfile: api/Dockerfile}
-    environment: { DATABASE_URL: postgresql://glassbox:${POSTGRES_PASSWORD}@postgres:5432/glassbox, REDIS_URL: redis://redis:6379, JWT_SECRET: ${JWT_SECRET}, PORT: 3000 }
-    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_started}}
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      DATABASE_URL: "postgresql://glassbox:${POSTGRES_PASSWORD:-glassbox-local-password}@postgres:5432/glassbox"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: ${JWT_SECRET:-glassbox-local-development-secret}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   worker:
-    build: {context: ., dockerfile: workers/Dockerfile}
-    environment: { DATABASE_URL: postgresql://glassbox:${POSTGRES_PASSWORD}@postgres:5432/glassbox, REDIS_URL: redis://redis:6379 }
-    volumes: [/var/run/docker.sock:/var/run/docker.sock]
-    depends_on: [postgres,redis]
-    deploy: {replicas: 2}
+    build:
+      context: .
+      dockerfile: workers/Dockerfile
+    environment:
+      DATABASE_URL: "postgresql://glassbox:${POSTGRES_PASSWORD:-glassbox-local-password}@postgres:5432/glassbox"
+      REDIS_URL: "redis://redis:6379"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - job_data:/job-data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   frontend:
-    build: {context: ., dockerfile: frontend/Dockerfile}
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+
   nginx:
     image: nginx:1.27-alpine
-    ports: ["80:80"]
-    volumes: [./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro]
-    depends_on: [api,frontend]
-volumes: {postgres_data: {}}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  job_data:
