@@ -37,5 +37,17 @@ class CppRuntimeTests(unittest.TestCase):
         self.assertEqual(result["stderr"], "execution timed out")
 
 
+class GoRuntimeTests(unittest.TestCase):
+    def test_hello_world(self):
+        result = submit("go", 'package main\nimport "fmt"\nfunc main(){fmt.Print("hello-go")}')
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["stdout"].strip(), "hello-go")
+
+    def test_infinite_loop_times_out(self):
+        result = submit("go", "package main\nfunc main(){for{}}")
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual(result["stderr"], "execution timed out")
+
+
 if __name__ == "__main__":
     unittest.main()

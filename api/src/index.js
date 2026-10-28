@@ -1,5 +1,5 @@
 import express from 'express'; import cors from 'cors'; import rateLimit from 'express-rate-limit'; import jwt from 'jsonwebtoken'; import bcrypt from 'bcrypt'; import {Queue} from 'bullmq'; import {v4 as uuid} from 'uuid'; import {createServer} from 'http'; import {Server} from 'socket.io'; import {pool,migrate} from './db.js';
-const SUPPORTED_LANGUAGES=['python','c','cpp','java','node','glassbox-lang'];
+const SUPPORTED_LANGUAGES=['python','c','cpp','go','java','node','glassbox-lang'];
 const app=express(), server=createServer(app), io=new Server(server,{cors:{origin:process.env.CORS_ORIGIN||'*'}}), queue=new Queue('runs',{connection:{url:process.env.REDIS_URL||'redis://redis:6379'}}); app.use(cors({origin:process.env.CORS_ORIGIN||'*'}));app.use(express.json({limit:'200kb'}));
 app.get('/health',(req,res)=>res.json({status:'ok'}));
 const secret=process.env.JWT_SECRET||'development-secret'; const auth=(req,res,next)=>{try{req.user=jwt.verify(req.headers.authorization?.replace('Bearer ','')||'',secret);next()}catch{res.status(401).json({error:'authentication required'})}};
