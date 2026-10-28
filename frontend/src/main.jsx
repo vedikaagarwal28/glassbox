@@ -7,7 +7,7 @@ const API = import.meta.env.VITE_API_URL || '/api';
 const languages = {
   python: { label: 'Python', emoji: '🐍', color: '#C1FF83', editor: 'python', code: 'print("Hello, GlassBox!")' },
   c: { label: 'C', emoji: '⚙️', color: '#90BDFF', editor: 'c', code: '#include <stdio.h>\nint main(){ puts("Hello, GlassBox!"); }' },
-  cpp: { label: 'C++', emoji: '➕', color: '#90BDFF', editor: 'cpp', code: '#include <iostream>\nint main() { std::cout << "Hello, GlassBox!" << std::endl; }' },
+  cpp: { label: 'C++', emoji: '➕', color: '#75E5EA', editor: 'cpp', code: '#include <iostream>\nint main() { std::cout << "Hello, GlassBox!" << std::endl; }' },
   java: { label: 'Java', emoji: '☕', color: '#FF9A9A', editor: 'java', code: 'class Main { public static void main(String[] a){System.out.println("Hello, GlassBox!");}}' },
   node: { label: 'Node.js', emoji: '🟩', color: '#96FFCA', editor: 'javascript', code: 'console.log("Hello, GlassBox!")' },
   'glassbox-lang': { label: 'glassbox-lang', emoji: '🔍', color: '#FFEA79', editor: 'plaintext', code: 'int n = 5;\nfunc fact(int x): int {\n  if (x <= 1) { return 1; }\n  return x * fact(x - 1);\n}\nprint(fact(n));' }
