@@ -20,6 +20,26 @@ source lines and variable scopes.
 - Docker sandbox limits: no network, read-only work directory, 128 MB RAM,
   0.5 CPU, 64 processes, and an eight-second worker timeout.
 - Responsive two-pane editor that stacks on mobile.
+- Playful learning interface inspired by FFCS-inator: pastel neo-brutalist
+  styling, language chips, a Write → Run → Peek inside quest tracker, XP and
+  levels per successful run, and a "Did you know?" tip on every result tab.
+
+## Using the workspace
+
+1. **Pick a language** from the chip row (Python, C, C++, Java, Node.js, or
+   glassbox-lang). Switching loads a starter program for that language.
+2. **Write** in the Monaco editor and optionally add standard input below it.
+3. **Run** with the green button. The status pill shows `Running…`, then the
+   execution time. A successful run awards 10 XP (a new level every 50 XP); a
+   failed run switches to the Errors tab. XP is kept in the browser's
+   `localStorage`, so it is per-browser and never sent to the server.
+4. **Peek inside** a glassbox-lang run with the Tokens (colour-coded lexer
+   output), AST (foldable tree), and Trace (step buttons plus a slider, with
+   in-scope variables shown as cards) tabs.
+5. **Save / Share** copies a `/snippet/<id>` link after you log in.
+
+Animations are disabled automatically when the operating system requests
+reduced motion.
 
 ## Architecture
 
@@ -148,7 +168,7 @@ int`, `Line 1: expected ;`, `undefined variable 'x'`, and
   enable the WSL2 backend), or Docker Engine + Compose.
 - Git.
 - At least 4 GB RAM allocated to Docker; 8 GB is more comfortable while
-  building the Java and C images.
+  building the Java, C, and C++ images.
 - Ports `80` (HTTP), `5432` (Postgres), and `6379` (Redis) must be available.
   Only port 80 is published by default.
 
@@ -291,13 +311,15 @@ restrict Docker access, and configure log shipping and monitoring.
   with `docker compose config`.
 - **API starts before its dependencies:** Postgres and Redis now have
   healthchecks, and API/worker use healthy `depends_on` conditions.
-- **Missing runtime images:** the five runtime images are explicit Compose
+- **Missing runtime images:** all runtime images are explicit Compose
   build targets and are built by `docker compose build`.
 - **Runtime cannot find `main`:** a worker-local temporary path is invisible
   to the host Docker daemon. Jobs now use the named `job_data` volume mounted
   by both the worker and runtime container.
-- **C/Java build errors:** C is compiled with `gcc -x c`; Java is copied to
-  writable `/tmp/Main.java` before compilation because `/work` is read-only.
+- **C/C++/Java build errors:** C is compiled with `gcc -x c` and C++ with
+  `g++ -x c++ -std=c++17`, because the submitted file is named `main` without
+  an extension; Java is copied to writable `/tmp/Main.java` before compilation
+  because `/work` is read-only.
 - **Timeout:** a program that runs longer than eight seconds returns a failed
   result with `execution timed out`; check `docker compose logs worker`.
 - **Port 80 in use:** set `HTTP_PORT=8080` in `.env`, then open port 8080.
@@ -314,7 +336,7 @@ restrict Docker access, and configure log shipping and monitoring.
 glassbox/
 ├── api/                 Express API, migrations, auth, queue producer
 ├── compiler-core/       Lexer, parser, semantic checker, interpreter, tests
-├── docker/runtimes/     Python, C, Java, Node, glassbox-lang images
+├── docker/runtimes/     Python, C, C++, Java, Node, glassbox-lang images
 ├── frontend/            React/Vite/Monaco application
 ├── workers/             BullMQ worker and Docker sandbox launcher
 ├── nginx/               Public reverse-proxy configuration
