@@ -37,6 +37,14 @@ services:
     entrypoint: ["sleep"]
     command: ["infinity"]
 
+  runtime-cpp:
+    image: glassbox-cpp
+    build:
+      context: .
+      dockerfile: docker/runtimes/cpp/Dockerfile
+    entrypoint: ["sleep"]
+    command: ["infinity"]
+
   runtime-java:
     image: glassbox-java
     build:

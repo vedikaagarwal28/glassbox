@@ -1,7 +1,7 @@
 # GlassBox
 
 GlassBox is a cloud compiler workspace for learning how programs execute. It
-accepts Python, C, Java, Node.js, and **glassbox-lang** programs, runs them in
+accepts Python, C, C++, Java, Node.js, and **glassbox-lang** programs, runs them in
 resource-limited Docker sandboxes, and returns readable output and diagnostics.
 The distinguishing feature is the glassbox-lang pipeline visualizer: every run
 can expose positioned tokens, a recursive AST, and an interpreter trace with
@@ -12,7 +12,7 @@ source lines and variable scopes.
 ## Features
 
 - Monaco source editor with language-aware syntax highlighting.
-- Python, C, Java, Node.js, and glassbox-lang execution.
+- Python, C, C++, Java, Node.js, and glassbox-lang execution.
 - Output and Errors tabs with bounded execution time.
 - glassbox-lang Tokens, AST, and Trace views.
 - JWT signup/login and authenticated snippet save/share links.
@@ -35,7 +35,7 @@ Browser (React + Monaco)
               worker + Docker socket
                    |
        isolated runtime containers
- Python | C | Java | Node | glassbox-lang
+ Python | C | C++ | Java | Node | glassbox-lang
 ```
 
 ### Services and request flow
@@ -213,7 +213,7 @@ Request is the same as signup. Response is a JWT, or `401` with
 
 Request:
 `{"language":"python","code":"print(1)","stdin":""}`  
-Response: `{"jobId":"<uuid>"}`. Supported languages are `python`, `c`, `java`,
+Response: `{"jobId":"<uuid>"}`. Supported languages are `python`, `c`, `cpp`, `java`,
 `node`, and `glassbox-lang`. Invalid input returns `400`.
 
 ### `GET /result/:jobId`
